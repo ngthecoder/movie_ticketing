@@ -11,14 +11,14 @@ Infrastructure: Docker, Kubernetes
 Tools: golang-migrate
 
 ## Structure
-The bookings/movies/payments/screenings/theaters/users folers each has
+The bookings/movies/payments/screenings/theaters/users folders each has
 - handler.go: Contains HTTP handlers
 - service.go: Contains internal processes
 - repository.go: Contains db operations
 
-The db folder cnotains the db mangement fucntions and migrations folder has necessary SQL operations.
+The db folder contains the db management functions and migrations folder has necessary SQL operations.
 
-The root folder has .env (defines environment variablse), docker-compose.yml (sets up Postgres container), go.mod/go.sum (manage dependencies), main.go (orchestrator for the HTTP server)
+The root folder has .env (defines environment variables), docker-compose.yml (sets up Postgres container), go.mod/go.sum (manage dependencies), main.go (orchestrator for the HTTP server)
 
 ## Endpoints
 GET /movies
