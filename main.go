@@ -8,6 +8,7 @@ import (
 	"github.com/ngthecoder/movie_ticketing/bookings"
 	"github.com/ngthecoder/movie_ticketing/db"
 	"github.com/ngthecoder/movie_ticketing/movies"
+	"github.com/ngthecoder/movie_ticketing/payments"
 	"github.com/ngthecoder/movie_ticketing/screenings"
 	"github.com/ngthecoder/movie_ticketing/theaters"
 	"github.com/ngthecoder/movie_ticketing/users"
@@ -40,6 +41,10 @@ func main() {
 	bookingService := bookings.NewBookingService(bookingRepository, screeningService)
 	bookingHandler := bookings.NewBookingHandler(bookingService)
 
+	paymentRepository := payments.NewPaymentRepository(db)
+	paymentService := payments.NewPaymentService(paymentRepository, bookingService, screeningService, movieService)
+	paymentHandler := payments.NewPaymentHandler(paymentService)
+
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -61,6 +66,8 @@ func main() {
 	r.GET("/screenings/:id", screeningHandler.GetByIdHandler)
 
 	r.POST("/bookings", bookingHandler.CreateHandler)
+
+	r.POST("/payments", paymentHandler.PayHandler)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("failed to run server: %v", err)

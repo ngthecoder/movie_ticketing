@@ -34,3 +34,13 @@ func (r *BookingRepository) Create(userId, screeningId, numTickets int) (Booking
 	tx.Commit()
 	return booking, nil
 }
+
+func (r *BookingRepository) GetById(id int) (Booking, error) {
+	booking := Booking{}
+	err := r.db.Get(&booking, "SELECT * FROM bookings WHERE id=$1", id)
+	if err != nil {
+		return Booking{}, err
+	}
+
+	return booking, nil
+}
