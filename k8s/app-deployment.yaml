@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-ticketing-app-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: movie-ticketing-app
+  template:
+    metadata:
+      labels:
+        app: movie-ticketing-app
+    spec:
+      containers:
+        - name: app-container
+          image: movie_ticketing_app:v1
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: movie-ticketing-configmap
+            - secretRef:
+                name: movie-ticketing-secret
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /movies
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
