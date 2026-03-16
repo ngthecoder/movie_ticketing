@@ -1,8 +1,6 @@
 # Movie Ticketing API
-Ticketing System for Movies
-
-## Motivation
-I mainly started this project to understand how Kubernetes works in an application deployment and additionally to understand the design patterns.
+A RESTful API for movie ticketing built with Go, PostgreSQL, and Kubernetes.
+Designed to explore real-world application deployment on Kubernetes and backend design patterns including layered architecture, sentinel errors, and database transactions.
 
 ## New Lessons
 ### PostgreSQL Transaction
@@ -22,41 +20,84 @@ Passwords are hashed using bcrypt before being stored in the database. Even if t
 All dependencies are assembled in `main.go` in order: repository → service → handler. Each layer declares what it needs through its constructor, keeping the dependency relationships explicit and centralized.
 
 ## Tech Stack
-- Backend: Go
-- Database: Postgres
-- Infrastructure: Docker, Kubernetes
-- Tools: golang-migrate
+| Category | Technology |
+|----------|------------|
+| Backend | Go, Gin |
+| Database | PostgreSQL |
+| Infrastructure | Docker, Kubernetes (minikube) |
+| Tools | golang-migrate, sqlx |
 
 ## Structure
-The bookings/movies/payments/screenings/theaters/users folders each has
-- handler.go: Contains HTTP handlers
-- service.go: Contains internal processes
-- repository.go: Contains db operations
-
-The db folder contains the db management functions and migrations folder has necessary SQL operations.
-
-The root folder has .env (defines environment variables), docker-compose.yml (sets up Postgres container), go.mod/go.sum (manage dependencies), main.go (orchestrator for the HTTP server)
+```
+movie_ticketing/
+├── bookings/
+│   ├── handler.go       # HTTP handlers
+│   ├── service.go       # Business logic
+│   └── repository.go    # DB operations
+├── movies/              # Same structure as bookings
+├── payments/            # Same structure as bookings
+├── screenings/          # Same structure as bookings
+├── theaters/            # Same structure as bookings
+├── users/               # Same structure as bookings
+├── db/
+│   ├── db.go            # DB connection
+│   └── seed.sql         # Seed data
+├── migrations/          # SQL migration files
+├── k8s/                 # Kubernetes manifests
+├── docker-compose.yml   # Local Postgres setup
+├── Dockerfile           # Multi-stage build
+├── main.go              # Entry point, dependency wiring
+└── go.mod
+```
 
 ## Endpoints
-- GET /movies
-- GET /movies/:id
-- GET /theaters
-- GET /theaters/:id
-- POST /users/register
-- POST /users/login
-- GET /screenings
-- GET /screenings/:id
-- POST /bookings
-- POST /payments
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/movies` | Returns all movies |
+| GET | `/movies/:id` | Returns one movie by ID |
+| GET | `/theaters` | Returns all theaters |
+| GET | `/theaters/:id` | Returns one theater by ID |
+| POST | `/users/register` | Registers a user, returns user info |
+| POST | `/users/login` | Logs in a user, returns user info |
+| GET | `/screenings` | Returns all screenings |
+| GET | `/screenings/:id` | Returns one screening by ID |
+| POST | `/bookings` | Creates a booking, returns booking info |
+| POST | `/payments` | Confirms a booking, returns payment info |
 
 ## Getting Started
-### Prerequisites
+### Run with Docker Compose
+#### Prerequisites
 - Docker
 - Go 1.21+
 
-### Run Locally
+#### Commands
 ```bash
-docker compose up -d
-migrate -path migrations -database "postgres://..." up
-go run main.go
+docker compose up --build
+```
+
+### Run with Minikube
+#### Prerequisites
+- Docker
+- Go 1.21+
+- Minikube
+
+#### Commands
+**Termianl 1**
+```bash
+minikube start
+eval $(minikube docker-env)
+docker build -t <image name>:<tag> .
+kubectl apply -f k8s/
+
+# Keep this running and move to Terminal 2
+kubectl port-forward pod/movie-ticketing-postgres-deployment-<id> 5432:5432
+```
+**Terminal 2**
+```bash
+migrate -path migrations -database "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" up
+psql "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" -f db/seed.sql  
+```
+**Back to Termianl 1 (after stopping port-forward with Ctrl+C)**
+```bash
+minikube service app-service --url   
 ```
