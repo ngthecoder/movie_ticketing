@@ -2,6 +2,7 @@ package users
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,7 @@ func (h *UserHandler) RegisterHandler(c *gin.Context) {
 			return
 		}
 
+		log.Printf("internal error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "something went wrong",
 		})
@@ -72,6 +74,7 @@ func (h *UserHandler) LoginHandler(c *gin.Context) {
 			return
 		}
 
+		log.Printf("internal error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "something went wrong",
 		})

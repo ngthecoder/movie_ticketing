@@ -2,6 +2,7 @@ package theaters
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -28,6 +29,7 @@ func (h *TheaterHandler) GetAllHandler(c *gin.Context) {
 			return
 		}
 
+		log.Printf("internal error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "something went wrong",
 		})
@@ -58,6 +60,7 @@ func (h *TheaterHandler) GetByIdHandler(c *gin.Context) {
 			return
 		}
 
+		log.Printf("internal error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "something went wrong",
 		})
