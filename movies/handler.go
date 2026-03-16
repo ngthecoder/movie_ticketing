@@ -24,7 +24,7 @@ func (h *MovieHandler) GetAllHandler(c *gin.Context) {
 	movies, err := h.service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"movies": []Movie{},
+			"movies": movies,
 		})
 		return
 	}
@@ -48,13 +48,13 @@ func (h *MovieHandler) GetByIdHandler(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
-				"movies": []Movie{},
+				"movies": movie,
 			})
 			return
 		}
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"movies": []Movie{},
+			"movies": movie,
 		})
 		return
 	}
