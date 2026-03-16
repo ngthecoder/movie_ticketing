@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ngthecoder/movie_ticketing/db"
 	"github.com/ngthecoder/movie_ticketing/movies"
+	"github.com/ngthecoder/movie_ticketing/screenings"
 	"github.com/ngthecoder/movie_ticketing/theaters"
 	"github.com/ngthecoder/movie_ticketing/users"
 )
@@ -30,6 +31,10 @@ func main() {
 	userService := users.NewUserService(userRepository)
 	userHandler := users.NewUserHandler(userService)
 
+	screeningRepository := screenings.NewScreeningRepository(db)
+	screeningService := screenings.NewScreeningService(screeningRepository)
+	screeningHandler := screenings.NewScreeningHandler(screeningService)
+
 	r := gin.Default()
 
 	r.GET("/ping", func(c *gin.Context) {
@@ -46,6 +51,9 @@ func main() {
 
 	r.POST("/users/register", userHandler.RegisterHandler)
 	r.POST("/users/login", userHandler.LoginHandler)
+
+	r.GET("/screenings", screeningHandler.GetAllHandler)
+	r.GET("/screenings/:id", screeningHandler.GetByIdHandler)
 
 	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("failed to run server: %v", err)
