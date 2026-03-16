@@ -4,6 +4,10 @@ Ticketing System for Movies
 ## Motivation
 I mainly started this project to understand how Kubernetes works in an application deployment and additionally to understand the design patterns.
 
+## Lessons
+### PostgreSQL Transaction
+I mostly used independent queries in movies, theaters, etc but in the bookings package, I used `db.Beginx()` to achieve Atomicity (one of the ACID) when executing two separate queries (creating a booking and updating the number of available seats).
+
 ## Tech Stack
 - Backend: Go
 - Database: Postgres
@@ -25,6 +29,10 @@ The root folder has .env (defines environment variables), docker-compose.yml (se
 - GET /movies/:id
 - GET /theaters
 - GET /theaters/:id
+- POST /users/register
+- POST /users/login
+- GET /screenings
+- GET /screenings/:id
 
 ## Getting Started
 ### Prerequisites
