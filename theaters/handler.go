@@ -23,13 +23,13 @@ func (h *TheaterHandler) GetAllHandler(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
-				"theaters": theaters,
+				"error": "theater not found",
 			})
 			return
 		}
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"theaters": theaters,
+			"error": "something went wrong",
 		})
 		return
 	}
@@ -44,7 +44,7 @@ func (h *TheaterHandler) GetByIdHandler(c *gin.Context) {
 	id, err := strconv.Atoi(stringId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"theater": Theater{},
+			"error": "ID format not compatible",
 		})
 		return
 	}
@@ -53,18 +53,18 @@ func (h *TheaterHandler) GetByIdHandler(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
-				"theater": theater,
+				"error": "theater not found",
 			})
 			return
 		}
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"theater": theater,
+			"error": "something went wrong",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"theaters": theater,
+		"theater": theater,
 	})
 }

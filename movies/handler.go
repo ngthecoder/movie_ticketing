@@ -23,8 +23,15 @@ func NewMovieHandler(service *MovieService) *MovieHandler {
 func (h *MovieHandler) GetAllHandler(c *gin.Context) {
 	movies, err := h.service.GetAll()
 	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "movie not found",
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"movies": movies,
+			"error": "something went wrong",
 		})
 		return
 	}
@@ -39,7 +46,7 @@ func (h *MovieHandler) GetByIdHandler(c *gin.Context) {
 	id, err := strconv.Atoi(stringId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"movies": []Movie{},
+			"error": "ID format not compatible",
 		})
 		return
 	}
@@ -48,13 +55,13 @@ func (h *MovieHandler) GetByIdHandler(c *gin.Context) {
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
-				"movies": movie,
+				"error": "movie not found",
 			})
 			return
 		}
 
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"movies": movie,
+			"error": "something went wrong",
 		})
 		return
 	}

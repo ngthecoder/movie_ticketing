@@ -22,6 +22,9 @@ func NewMovieService(repository *MovieRepository) *MovieService {
 func (s *MovieService) GetAll() ([]Movie, error) {
 	movies, err := s.repository.GetAll()
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 
