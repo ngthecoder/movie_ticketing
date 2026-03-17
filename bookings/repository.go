@@ -1,6 +1,12 @@
 package bookings
 
-import "github.com/jmoiron/sqlx"
+import (
+	"errors"
+
+	"github.com/jmoiron/sqlx"
+)
+
+var ErrNotEnoughSeats = errors.New("not enough seats available")
 
 type BookingRepository struct {
 	db *sqlx.DB
@@ -18,6 +24,16 @@ func (r *BookingRepository) Create(userId, screeningId, numTickets int) (Booking
 		return Booking{}, err
 	}
 	defer tx.Rollback()
+
+	var availableSeats int
+	err = tx.Get(&availableSeats, "SELECT available_seats FROM screenings WHERE id=$1 FOR UPDATE", screeningId)
+	if err != nil {
+		return Booking{}, err
+	}
+
+	if numTickets > availableSeats {
+		return Booking{}, ErrNotEnoughSeats
+	}
 
 	booking := Booking{}
 	status := "pending"

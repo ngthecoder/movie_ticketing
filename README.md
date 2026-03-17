@@ -22,8 +22,13 @@ In `app-deployment.yaml`, I used both LivenessProbe and ReadinessProbe and I cho
 ### AccessMode for Persistent Volume Claim
 In `postgres-pvc.yaml`, I set `ReadWriteOnce` for `accessModes`, which means the volume can only be mounted by a single node at a time. This is appropriate because there is only one postgres pod in this deployment. If multiple pods needed to share the same volume simultaneously, `ReadWriteMany` would be required instead.
 
-## Use of Init Container
+### Use of Init Container
 After applying the manifests, the app pods were failing the readiness check because the postgres pod had no tables yet. The workaround was to manually port-forward to the postgres pod and run the migration from my local machine. To fix this, I created `Dockerfile.migrate` which copies the migrations folder into the `migrate/migrate` image, and added an init container to the app deployment that runs the migration before the app container starts.
+
+### SELECT FOR UPDATE and CHECK Constraint
+When creating a booking, the available seats check and the UPDATE ran in separate steps, leaving a window where concurrent transactions could both pass the check before either updated the seats, a race condition. To fix this, I moved the check inside the transaction in `bookings/repository.go` and used `SELECT FOR UPDATE` to lock the row before checking and updating, ensuring only one transaction can proceed at a time.
+
+I also added `CHECK (available_seats >= 0)` to the screenings table as a last line of defense at the DB level.
 
 ## Intentional Designs
 ### Repository Pattern
@@ -93,7 +98,7 @@ movie_ticketing/
 ### Run with Docker Compose
 #### Prerequisites
 - Docker
-- Go 1.21+
+- Go 1.25+
 
 #### Commands
 ```bash
@@ -103,7 +108,7 @@ docker compose up --build
 ### Run with Minikube
 #### Prerequisites
 - Docker
-- Go 1.21+
+- Go 1.25+
 - Minikube
 
 #### Commands
@@ -111,7 +116,8 @@ docker compose up --build
 ```bash
 minikube start
 eval $(minikube docker-env)
-docker build -t <image name>:<tag> .
+docker build -t movie_ticketing_app:v1 .
+docker build -f Dockerfile.migrate -t movie_ticketing_migrate:v1 .
 kubectl apply -f k8s/
 
 # Keep this running and move to Terminal 2
@@ -119,7 +125,7 @@ kubectl port-forward pod/movie-ticketing-postgres-deployment-<id> 5432:5432
 ```
 **Terminal 2**
 ```bash
-migrate -path migrations -database "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" up
+# Inject seed data
 psql "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" -f db/seed.sql  
 ```
 **Back to Terminal 1 (after stopping port-forward with Ctrl+C)**

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ngthecoder/movie_ticketing/screenings"
 )
 
 type BookingHandler struct {
@@ -40,7 +39,7 @@ func (h *BookingHandler) CreateHandler(c *gin.Context) {
 				"error": "not enough seats available",
 			})
 			return
-		} else if errors.Is(err, screenings.ErrNotFound) {
+		} else if errors.Is(err, ErrNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{
 				"error": "screening not found",
 			})

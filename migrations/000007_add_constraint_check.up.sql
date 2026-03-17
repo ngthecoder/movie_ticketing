@@ -1,0 +1,1 @@
+ALTER TABLE screenings ADD CONSTRAINT check_available_seats CHECK (available_seats >= 0);
