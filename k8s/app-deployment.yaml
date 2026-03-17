@@ -12,6 +12,21 @@ spec:
       labels:
         app: movie-ticketing-app
     spec:
+      initContainers:
+        - name: migrate
+          image: movie_ticketing_migrate:v1
+          args:
+            - "-path"
+            - "/migrations"
+            - "-database"
+            - "postgres://postgres:$(DB_PASSWORD)@postgres-service:5432/movie_ticketing?sslmode=disable"
+            - "up"
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-ticketing-secret
+                  key: DB_PASSWORD
       containers:
         - name: app-container
           image: movie_ticketing_app:v1
