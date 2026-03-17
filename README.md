@@ -6,6 +6,22 @@ Designed to explore real-world application deployment on Kubernetes and backend 
 ### PostgreSQL Transaction
 I mostly used independent queries in movies, theaters, etc but in the bookings package, I used `db.Beginx()` to achieve Atomicity (one of the ACID) when executing two separate queries (creating a booking and updating the number of available seats).
 
+### Environment Variables Injection in Kubernetes
+There are two ways to inject environment variables into a Deployment: `envFrom` and `env`. I used `envFrom` in `app-deployment.yaml` because the key names in ConfigMap match exactly what the app expects. I used `env` in `postgres-deployment.yaml` because the Postgres image expects different variable names (e.g. `POSTGRES_USER`) than what is defined in ConfigMap (e.g. `DB_USER`), so each variable needs to be mapped individually.
+
+### Use of Labels and Metadata
+K8s service discovery works in two steps.
+
+First, the app pod looks for `postgres-service` by name (`DB_HOST` in `configmap.yaml`). K8s resolves this name as DNS within the cluster, so `DB_HOST` must match `metadata.name` in `postgres-service.yaml`.
+
+Second, once the postgres Service receives a request, it forwards it to the matching pod using `selector.app`, which must match `spec.template.metadata.labels.app` in `postgres-deployment.yaml`.
+
+### Use of LivenessProbe and ReadinessProbe
+In `app-deployment.yaml`, I used both LivenessProbe and ReadinessProbe and I chose /ping for LivenessProbe and /movies for ReadinessProbe because successful check against /ping only proves the app pod is alive and doesn't indicate whether the pod is properly talking with the postgres pod. On the other hand, successful check against /movies shows that the app pod can retrieve data from the postgres pod and it is ready to serve the application.
+
+### AccessMode for Persistent Volume Claim
+In `postgres-pvc.yaml`, I set `ReadWriteOnce` for `accessModes`, which means the volume can only be mounted by a single node at a time. This is appropriate because there is only one postgres pod in this deployment. If multiple pods needed to share the same volume simultaneously, `ReadWriteMany` would be required instead.
+
 ## Intentional Designs
 ### Repository Pattern
 The app follows a handler -> service -> repository -> DB layered structure. Each layer only communicates with the layer directly below it, hiding database implementation details from the upper layers. Swapping out the database only requires changes in the repository layer.
@@ -18,6 +34,12 @@ Passwords are hashed using bcrypt before being stored in the database. Even if t
 
 ### Dependency Injection
 All dependencies are assembled in `main.go` in order: repository → service → handler. Each layer declares what it needs through its constructor, keeping the dependency relationships explicit and centralized.
+
+### Kubernetes Service Types
+I used NodePort for service type in `app-service.yaml` and ClusterIP in `postgres-service.yaml` because the postgres pod should only be accessible within the cluster while the app/API pod needs to be accessed from the public.
+
+### Kubernetes Secret Encoding
+Credentials stored in Kubernetes Secrets must be base64 encoded. Note that base64 is not encryption and it can be easily decoded. Secrets are simply base64 encoded to ensure safe handling of binary data in YAML format because credentials often contain special characters like # and ! that could break YAML parsing. For production use, additional security measures such as encrypted Secret stores are recommended.
 
 ## Tech Stack
 | Category | Technology |
@@ -82,7 +104,7 @@ docker compose up --build
 - Minikube
 
 #### Commands
-**Termianl 1**
+**Terminal 1**
 ```bash
 minikube start
 eval $(minikube docker-env)
@@ -97,7 +119,7 @@ kubectl port-forward pod/movie-ticketing-postgres-deployment-<id> 5432:5432
 migrate -path migrations -database "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" up
 psql "postgres://postgres:<password>@localhost:5432/movie_ticketing?sslmode=disable" -f db/seed.sql  
 ```
-**Back to Termianl 1 (after stopping port-forward with Ctrl+C)**
+**Back to Terminal 1 (after stopping port-forward with Ctrl+C)**
 ```bash
 minikube service app-service --url   
 ```
