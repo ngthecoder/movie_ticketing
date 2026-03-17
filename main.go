@@ -38,7 +38,7 @@ func main() {
 	screeningHandler := screenings.NewScreeningHandler(screeningService)
 
 	bookingRepository := bookings.NewBookingRepository(db)
-	bookingService := bookings.NewBookingService(bookingRepository, screeningService)
+	bookingService := bookings.NewBookingService(bookingRepository)
 	bookingHandler := bookings.NewBookingHandler(bookingService)
 
 	paymentRepository := payments.NewPaymentRepository(db)

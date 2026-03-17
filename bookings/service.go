@@ -3,40 +3,27 @@ package bookings
 import (
 	"database/sql"
 	"errors"
-
-	"github.com/ngthecoder/movie_ticketing/screenings"
 )
 
 var ErrNotFound = errors.New("booking not found")
-var ErrNotEnoughSeats = errors.New("not enough seats available")
+var ErrScreeningNotFound = errors.New("screening not found")
 
 type BookingService struct {
-	r          *BookingRepository
-	screeningS *screenings.ScreeningService
+	r *BookingRepository
 }
 
-func NewBookingService(r *BookingRepository, screeningS *screenings.ScreeningService) *BookingService {
+func NewBookingService(r *BookingRepository) *BookingService {
 	return &BookingService{
-		r:          r,
-		screeningS: screeningS,
+		r: r,
 	}
 }
 
 func (s *BookingService) Create(userId, screeningId, numTickets int) (Booking, error) {
-	screening, err := s.screeningS.GetById(screeningId)
-	if err != nil {
-		if errors.Is(err, screenings.ErrNotFound) {
-			return Booking{}, screenings.ErrNotFound
-		}
-
-		return Booking{}, err
-	}
-	if numTickets > screening.AvailableSeats {
-		return Booking{}, ErrNotEnoughSeats
-	}
-
 	booking, err := s.r.Create(userId, screeningId, numTickets)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Booking{}, ErrScreeningNotFound
+		}
 		return Booking{}, err
 	}
 

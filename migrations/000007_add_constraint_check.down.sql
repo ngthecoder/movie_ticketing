@@ -1,0 +1,1 @@
+ALTER TABLE screenings DROP CONSTRAINT check_available_seats
