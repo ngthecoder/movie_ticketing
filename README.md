@@ -22,6 +22,9 @@ In `app-deployment.yaml`, I used both LivenessProbe and ReadinessProbe and I cho
 ### AccessMode for Persistent Volume Claim
 In `postgres-pvc.yaml`, I set `ReadWriteOnce` for `accessModes`, which means the volume can only be mounted by a single node at a time. This is appropriate because there is only one postgres pod in this deployment. If multiple pods needed to share the same volume simultaneously, `ReadWriteMany` would be required instead.
 
+## Use of Init Container
+After applying the manifests, the app pods were failing the readiness check because the postgres pod had no tables yet. The workaround was to manually port-forward to the postgres pod and run the migration from my local machine. To fix this, I created `Dockerfile.migrate` which copies the migrations folder into the `migrate/migrate` image, and added an init container to the app deployment that runs the migration before the app container starts.
+
 ## Intentional Designs
 ### Repository Pattern
 The app follows a handler -> service -> repository -> DB layered structure. Each layer only communicates with the layer directly below it, hiding database implementation details from the upper layers. Swapping out the database only requires changes in the repository layer.
