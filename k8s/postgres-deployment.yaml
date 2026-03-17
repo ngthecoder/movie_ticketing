@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: movie-ticketing-postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-ticketing-postgres
+  template:
+    metadata:
+      labels:
+        app: movie-ticketing-postgres
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:16
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-ticketing-configmap
+                  key: DB_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-ticketing-configmap
+                  key: DB_NAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: movie-ticketing-secret
+                  key: DB_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
