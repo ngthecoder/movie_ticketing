@@ -19,9 +19,15 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: "postgres"
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-ticketing-configmap
+                  key: DB_USER
             - name: POSTGRES_DB
-              value: "movie_ticketing"
+              valueFrom:
+                configMapKeyRef:
+                  name: movie-ticketing-configmap
+                  key: DB_NAME
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
